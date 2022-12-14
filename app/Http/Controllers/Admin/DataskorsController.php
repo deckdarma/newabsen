@@ -1,0 +1,115 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Classes\Reply;
+use App\Http\Controllers\AdminBaseController;
+use App\Http\Requests\Admin\DataSkor\DeleteRequest;
+use App\Http\Requests\Admin\DataSkor\StoreRequest;
+use App\Http\Requests\Admin\DataSkor\UpdateRequest;
+use App\Models\Dataskor;
+use Illuminate\Support\Facades\View;
+use Yajra\DataTables\Facades\DataTables;
+
+/**
+ * Class DataskorsController
+ * @package App\Http\Controllers\Admin
+ */
+class DataskorsController extends AdminBaseController
+{
+
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->pageTitle = 'DataSkor';
+        $this->attendanceOpen = 'active';
+        $this->dataSkorActive = 'active';
+        $this->pageTitle = trans('List Nama Data Skor');
+
+    }
+
+    /**
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function index()
+    {
+        $this->dataSkors = Dataskor::all();
+        return View::make('admin.dataskors.index', $this->data);
+    }
+
+    /**
+     * @return mixed
+     * @throws \Exception
+     */
+    public function ajaxDataSkor()
+    {
+        $result = Dataskor::select('id', 'dataSkor', 'num_of_leave',   'singkat',   'potongan',   'potongan_shift');
+
+        return DataTables::of($result)
+            ->addColumn('edit', function ($row) {
+                return '<a  class="btn purple btn-sm margin-bottom-10"  onclick="showEdit(' . $row->id . ',\'' . addslashes($row->dataSkor) . '\',\'' . $row->num_of_leave . '\')"><i class="fa fa-edit"></i> <span class="hidden-sm hidden-xs">' . trans("core.btnViewEdit") . '</span></a>
+                          ';
+            })
+            ->removeColumn('id')
+            ->rawColumns(['edit'])
+            ->escapeColumns(['edit'])
+            ->make(true);
+    }
+
+    /**
+     * @param CreateRequest $request
+     * @return array
+     */
+    public function store(StoreRequest $request)
+    {
+        Dataskor::create($request->toArray());
+
+        return Reply::success('Berhasil di Tambahkan');
+    }
+
+    /**
+     * @param $id
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function edit($id)
+    {
+        $this->dataskor = Dataskor::find($id);
+        return View::make('admin.dataskors.edit', $this->data);
+    }
+
+    /**
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function create()
+    {
+        return View::make('admin.dataskors.create');
+    }
+
+    /**
+     * @param UpdateRequest $request
+     * @param $id
+     * @return array
+     */
+    public function update(UpdateRequest $request, $id)
+    {
+        $dataskor = Dataskor::findOrFail($id);
+        $dataskor->update($request->toArray());
+        return Reply::success('Dataskor updated successfully');
+    }
+
+    /**
+     * @param DeleteRequest $request
+     * @param $id
+     * @return array
+     */
+    public function destroy(DeleteRequest $request, $id)
+    {
+        Dataskor::destroy($id);
+
+        return Reply::success('messages.dataSkorDeleteMessage');
+
+
+    }
+
+}
